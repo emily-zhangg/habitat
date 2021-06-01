@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New Habit</title>
+  </head>
+  <body>
+    <form action="/create/<%=user_id%>" method="POST">
+      <p>pick your avatar</p>
+      <input type="radio" name="avatar" value="1" />
+      <label>avatar 1</label><br />
+      <label>Enter Your Habit</label>
+      <input type="text" name="habit" />
+      <label>Enter A Description of your Habit</label>
+      <input type="text" name="description" />
+      <label>Enter your action plan</label>
+      <input type="text" name="action" />
+      <label>Frequency</label>
+      <input type="checkbox" name="frequency" value="Mon" />
+      <input type="checkbox" name="frequency" value="Tue" />
+      <input type="checkbox" name="frequency" value="Wed" />
+      <input type="checkbox" name="frequency" value="Thur" />
+      <input type="checkbox" name="frequency" value="Fri" />
+      <input type="checkbox" name="frequency" value="Sat" />
+      <input type="checkbox" name="frequency" value="Sun" />
+      <label>Enter your Reminder Time</label>
+      <input type="text" name="reminder" />
+      <button type="submit">Submit</button>
+      <button formaction="/" formmethod="GET">Cancel</button>
+    </form>
+  </body>
+</html>
