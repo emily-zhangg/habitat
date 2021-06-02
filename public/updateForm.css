@@ -1,0 +1,9 @@
+.update-form {
+  width: 80%;
+  margin: auto;
+}
+.update-form textarea {
+  margin-left: 10%;
+  margin-right: 10%;
+  margin-bottom: 10px;
+}

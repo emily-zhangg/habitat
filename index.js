@@ -112,13 +112,15 @@ app.get("/", checkAuth, (req, res) => {
 
 //update habit
 app.get("/update/:habit_id", checkAuth, (req, res) => {
+  console.log(req.params.habit_id);
   pool.query(
     `SELECT * FROM habits WHERE id=${req.params.habit_id}`,
     (error, result) => {
       if (error) {
         console.error("error", error);
       }
-      res.render("updateForm", { habit: result.rows[0] });
+      const habitDetails = result.rows[0];
+      res.render("updateForm", { habit: habitDetails });
     }
   );
 });
@@ -148,7 +150,7 @@ app.post("/create/:user_id", checkAuth, (req, res) => {
         return console.error("error", error);
       }
       const habit_id = result.rows[0].id;
-      req.body.frequency.forEach((frequency) => {
+      [...req.body.frequency].forEach((frequency) => {
         pool.query(
           "INSERT INTO habit_action (habit_id,frequency) VALUES ($1,$2)",
           [habit_id, frequency],

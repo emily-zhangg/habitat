@@ -1,34 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <%-include('partials/header',{})%>
     <title>New Habit</title>
   </head>
   <body>
-    <form action="/create/<%=user_id%>" method="POST">
+    <%- include('partials/nav',{user_id:user_id})-%>
+    <form
+      class="form-horizontal form-group"
+      action="/create/<%=user_id%>"
+      method="POST"
+    >
       <p>pick your avatar</p>
       <input type="radio" name="avatar" value="1" />
-      <label>avatar 1</label><br />
+      <label><img src="avatar/1/neutral" /></label><br />
       <label>Enter Your Habit</label>
-      <input type="text" name="habit" />
-      <label>Enter A Description of your Habit</label>
-      <input type="text" name="description" />
+      <input type="text" name="habit" /><br />
+      <label>Enter Due Date of your Habit</label>
+      <input type="text" name="endDate" /><br />
+      <label>Enter Formation Days of your Habit</label>
+      <input type="number" name="formationDays" /><br />
       <label>Enter your action plan</label>
-      <input type="text" name="action" />
+      <input type="text" name="action" /><br />
       <label>Frequency</label>
-      <input type="checkbox" name="frequency" value="Mon" />
-      <input type="checkbox" name="frequency" value="Tue" />
-      <input type="checkbox" name="frequency" value="Wed" />
-      <input type="checkbox" name="frequency" value="Thur" />
-      <input type="checkbox" name="frequency" value="Fri" />
-      <input type="checkbox" name="frequency" value="Sat" />
-      <input type="checkbox" name="frequency" value="Sun" />
+      <input type="checkbox" name="frequency" value="1" />
+      <input type="checkbox" name="frequency" value="2" />
+      <input type="checkbox" name="frequency" value="3" />
+      <input type="checkbox" name="frequency" value="4" />
+      <input type="checkbox" name="frequency" value="5" />
+      <input type="checkbox" name="frequency" value="6" />
+      <input type="checkbox" name="frequency" value="7" /><br />
       <label>Enter your Reminder Time</label>
-      <input type="text" name="reminder" />
-      <button type="submit">Submit</button>
-      <button formaction="/" formmethod="GET">Cancel</button>
+      <input type="text" name="reminder" /><br />
+      <button class="btn btn-default" formaction="/" formmethod="GET">
+        Cancel
+      </button>
+      <button class="btn btn-default" type="submit">Submit</button>
     </form>
   </body>
 </html>

@@ -1,17 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+  <%-include('partials/header',{})%>
   <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Habit Check In</title>
   </head>
   <body>
+    <%- include('partials/nav',{user_id:habit.user_id})-%>
     <h1><%=habit.habit%></h1>
-    <form action="/update/<%=habit.id%>" method="POST">
-      <input type="text" name="checkInText" />
-      <button type="submit">Log Habit</button>
-      <button formaction="/" formmethod="GET">Cancel</button>
+    <form
+      class="form-horizontal form-group update-form col-sm-10"
+      action="/update/<%=habit.id%>"
+      method="POST"
+    >
+      <textarea
+        class="form-control"
+        rows="3"
+        placeholder="Enter your progress"
+        name="checkInText"
+      ></textarea>
+      <button class="btn btn-default" type="submit">Log Habit</button>
+      <button class="btn btn-default" formaction="/" formmethod="GET">
+        Cancel
+      </button>
     </form>
   </body>
 </html>

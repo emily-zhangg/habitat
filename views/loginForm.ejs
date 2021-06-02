@@ -1,18 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
+    <%-include('partials/header',{})%>
   <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Log In</title>
   </head>
   <body>
-    <form action ='/login' method="POST">
-      <label for="email">Enter your email</label>
-      <input type="email" name="email" id="email" />
-      <label for="password">Enter your password </label>
-      <input type="text" name="password" id="password" />
-      <button type='submit'>Login Now</button>
-    </form action ='/confirmation' method="POST">
+    <form action="/login" method="POST" class="form-horizontal">
+      <div class="form-group">
+        <label for="inputEmail3" class="col-sm-2 control-label">Email</label>
+        <div class="col-sm-8">
+          <input name='email'
+            type="email"
+            class="form-control"
+            id="inputEmail3"
+            placeholder="Email"
+          />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="inputPassword3" class="col-sm-2 control-label"
+          >Password</label
+        >
+        <div class="col-sm-8">
+          <input name='password'
+            type="password"
+            class="form-control"
+            id="inputPassword3"
+            placeholder="Password"
+          />
+        </div>
+      </div>
+        <div class="col-sm-offset-2 col-sm-10">
+          <button type="submit" class="btn btn-default">Sign in</button>
+        </div>
+      </div>
+    </form>
   </body>
 </html>

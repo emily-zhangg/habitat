@@ -1,27 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
+  <%-include('partials/header',{})%>
   <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="homepage.css" />
+
     <title>Home Page</title>
   </head>
   <body>
+    <%- include('partials/nav',{user_id:habits[0].user_id})-%>
     <h1>Welcome Back <%=user.name%></h1>
     <%if (habits.length>0){%> <% habits.forEach((habit)=>{%>
-    <p><%=habit.habit%></p>
-    <img src="avatar/<%=habit.avatar%>/happy" />
-    <form action="/update/<%=habit.id%>">
-      <button type="submit">Feed Me!</button>
-    </form>
+    <div class="habit">
+      <h3 class="lead"><%=habit.habit%></h3>
+      <img src="avatar/<%=habit.avatar%>/happy" />
+      <form action="/update/<%=habit.id%>">
+        <button class="btn btn-default" type="submit">Feed Me!</button>
+      </form>
+    </div>
     <%})%> <%}else{%>
-    <p>You have no ongoing habits</p>
+    <div class="habit">
+      <h3 class="lead">You have no ongoing habit. Create a habit today!</h3>
+    </div>
     <%}%>
-    <form action="/create/<%=habits[0].user_id%>">
-      <button type="submit">Create Habit</button>
-    </form>
-    <form action="/logout">
-      <button type="submit">Logout</button>
-    </form>
   </body>
 </html>
