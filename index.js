@@ -2,7 +2,11 @@ import express from "express";
 import pg from "pg";
 import jsSHA from "jssha";
 import cookieParser from "cookie-parser";
-import axios from "axios";
+import cron from "node-cron";
+import sgMail from "@sendgrid/mail";
+import dotenv from "dotenv";
+dotenv.config();
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Initialise the DB connection
 const { Pool } = pg;
@@ -14,42 +18,7 @@ const pgConnectionConfigs = {
 };
 const pool = new Pool(pgConnectionConfigs);
 const app = express();
-// app.use((request, response, next) => {
-//   // set the default value
-//   request.isUserLoggedIn = false;
 
-//   // check to see if the cookies you need exists
-//   if (request.cookies.loggedIn && request.cookie.userId) {
-//     // get the hased value that should be inside the cookie
-//     const hash = getHash(request.cookies.userId);
-
-//     // test the value of the cookie
-//     if (request.cookies.loggedIn === hash) {
-//       request.isUserLoggedIn = true;
-
-//       // look for this user in the database
-//       const values = [request.cookies.userId];
-
-//       // try to get the user
-//       pool.query('SELECT * FROM users WHERE id=$1', values, (error, result) => {
-//         if (error || result.rows.length < 1) {
-//           response.render('login',{});
-//           return;
-//         }
-
-//         // set the user as a key in the request object so that it's accessible in the route
-//         request.user = result.rows[0];
-
-//         next();
-//       });
-
-//       // make sure we don't get down to the next() below
-//       return;
-//     }
-//   }
-
-//   next();
-// });
 app.use(express.static("public"));
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: false }));
@@ -83,6 +52,23 @@ const checkAuth = (request, response, next) => {
   }
   request.isUserLoggedIn ? next() : response.redirect("/login");
 };
+
+const getNumberOfDays = (end) => {
+  const date1 = new Date();
+  const date2 = new Date(end);
+
+  // One day in milliseconds
+  const oneDay = 1000 * 60 * 60 * 24;
+
+  // Calculating the time difference between two dates
+  const diffInTime = date2.getTime() - date1.getTime();
+
+  // Calculating the no. of days between two dates
+  const diffInDays = Math.round(diffInTime / oneDay);
+
+  return diffInDays;
+};
+
 //main home page
 app.get("/", checkAuth, (req, res) => {
   //render home page of user, will require the following data - username, user habits
@@ -96,13 +82,63 @@ app.get("/", checkAuth, (req, res) => {
       const user_id = results.rows[0].id;
       const username = results.rows[0].name;
       pool.query(
-        `SELECT * FROM habits WHERE user_id=${user_id}`,
+        `SELECT * FROM habits WHERE user_id=${user_id}  AND status=true`,
         (error, result) => {
           if (error) {
             console.error("error", error);
             return;
           }
-          const data = { user: { name: username }, habits: result.rows };
+          const activeHabits = [];
+          result.rows.forEach((habit) => {
+            if (
+              getNumberOfDays(habit.end_date) >= 0 &&
+              getNumberOfDays(habit.last_check_in) >= -habit.frequency
+            ) {
+              activeHabits.push(habit);
+              console.log(
+                "habit id",
+                habit.id,
+                "cond1",
+                getNumberOfDays(habit.end_date),
+                "cond2",
+                getNumberOfDays(habit.last_check_in)
+              );
+            }
+            console.log("99", habit.id, getNumberOfDays(habit.last_check_in));
+          });
+          result.rows.forEach((habit) => {
+            if (
+              getNumberOfDays(habit.end_date) < 0 ||
+              getNumberOfDays(habit.last_check_in) < -habit.frequency
+            ) {
+              pool.query(
+                `UPDATE habits SET status=false WHERE id=${habit.id}`,
+                (err, result) => {
+                  if (err) {
+                    return console.log("error", err);
+                  }
+                }
+              );
+            }
+          });
+          const avatarState = [];
+          activeHabits.forEach((habit) => {
+            const fractionOfTimeLapse =
+              getNumberOfDays(habit.last_check_in) / habit.frequency;
+            if (fractionOfTimeLapse > 0.5) {
+              avatarState.push("angry");
+            } else if (fractionOfTimeLapse > 0.1) {
+              avatarState.push("neutral");
+            } else {
+              avatarState.push("happy");
+            }
+          });
+          const data = {
+            user: { name: username },
+            habits: activeHabits,
+            avatarState: avatarState,
+            user_id: user_id,
+          };
           res.render("homepage", data);
         }
       );
@@ -110,6 +146,35 @@ app.get("/", checkAuth, (req, res) => {
   );
 });
 
+app.get("/social/:user_id", (req, res) => {
+  pool.query(
+    "SELECT users.name,habits.habit,habits.avatar FROM users INNER JOIN habits ON habits.user_id=users.id WHERE habits.status=true ORDER BY habits.created_at",
+    (err, result) => {
+      if (err) {
+        return console.error("error", err);
+      }
+      res.render("social", {
+        user_id: req.params.user_id,
+        habits: result.rows,
+      });
+    }
+  );
+});
+
+app.get("/missed/:user_id", (req, res) => {
+  pool.query(
+    `SELECT * FROM habits WHERE user_id=${req.params.user_id}  AND status=false`,
+    (err, result) => {
+      if (err) {
+        return console.error("error", err);
+      }
+      res.render("missedHabits", {
+        user_id: req.params.user_id,
+        habits: result.rows,
+      });
+    }
+  );
+});
 //update habit
 app.get("/update/:habit_id", checkAuth, (req, res) => {
   console.log(req.params.habit_id);
@@ -125,44 +190,117 @@ app.get("/update/:habit_id", checkAuth, (req, res) => {
   );
 });
 
+app.post("/update/:habit_id", checkAuth, (req, res) => {
+  const currentDate = new Date();
+  const checkInDate = `${currentDate.getFullYear()}-0${
+    currentDate.getMonth() + 1
+  }-0${currentDate.getDate()}`;
+  console.log(checkInDate, req.params.habit_id, getNumberOfDays(checkInDate));
+  pool.query(
+    `UPDATE habits SET last_check_in = '${checkInDate}' WHERE id =${req.params.habit_id}`,
+    (err, result) => {
+      if (err) {
+        return console.err("error", err);
+      }
+      res.redirect("/");
+    }
+  );
+  pool.query(
+    "INSERT INTO updates (habit_id,update) VALUES ($1,$2)",
+    [req.params.habit_id, req.body.update],
+    (err, result) => {
+      if (err) {
+        return console.log("error", err);
+      }
+    }
+  );
+});
+
 //create habit pages
 app.get("/create/:user_id", checkAuth, (req, res) => {
   res.render("newHabit", { user_id: req.params.user_id });
 });
+
 app.post("/create/:user_id", checkAuth, (req, res) => {
-  console.log(req.body);
+  console.log(typeof req.body.frequency);
+  const formationDays = getNumberOfDays(req.body.endDate);
+  const dateRightNow = new Date();
+  const currentDate = `${dateRightNow.getFullYear()}-${
+    dateRightNow.getMonth() + 1
+  }-${dateRightNow.getDate()}`;
+  console.log(req.body.frequency);
   pool.query(
-    "INSERT INTO habits (user_id,habit,description,avatar,status,reminder_time,action,formation_days,end_date,completed_days) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *",
+    "INSERT INTO habits (user_id,habit,avatar,action,frequency,reminder_time,status,end_date,formation_days,completed_days,last_check_in) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *",
     [
       req.params.user_id,
       req.body.habit,
-      req.body.description,
       req.body.avatar,
-      true,
-      req.body.reminder,
       req.body.action,
-      req.body.formationDays,
+      req.body.frequency,
+      req.body.reminder,
+      true,
       req.body.endDate,
+      formationDays,
       0,
+      currentDate,
     ],
     (error, result) => {
       if (error) {
         return console.error("error", error);
       }
-      const habit_id = result.rows[0].id;
-      [...req.body.frequency].forEach((frequency) => {
-        pool.query(
-          "INSERT INTO habit_action (habit_id,frequency) VALUES ($1,$2)",
-          [habit_id, frequency],
-          (err, results) => {
-            if (err) {
-              return console.error("err", err);
-            }
-            console.log("successfully added");
-          }
-        );
-      })(res.redirect("/"));
+      res.redirect("/");
     }
+  );
+  const reminderHour = Number(req.body.reminder.split(":")[0]);
+  const reminderMinute = Number(req.body.reminder.split(":")[1]);
+  const hasReminderTimePassed =
+    reminderHour === dateRightNow.getHours()
+      ? reminderMinute >= dateRightNow.getMinutes()
+      : reminderHour > dateRightNow.getHours();
+  console.log(reminderHour, reminderMinute);
+  const job = cron.schedule(
+    `${reminderMinute} */${req.body.frequency * 24} * * *`,
+    function () {
+      console.log("send mail");
+      const emailDateRightNow = new Date();
+      let secondsAdded;
+      if (hasReminderTimePassed) {
+        secondsAdded =
+          (24 - emailDateRightNow.getHours() - 1 + reminderHour) * 60 * 60 +
+          (60 - emailDateRightNow.getMinutes() + reminderMinute) * 60;
+      } else {
+        secondsAdded =
+          (reminderHour - emailDateRightNow.getHours()) * 60 * 60 +
+          (reminderMinute - emailDateRightNow.getMinutes()) * 60;
+      }
+      let emailSentAt = +emailDateRightNow.getTime() + secondsAdded;
+      emailSentAt = Math.floor(emailSentAt / 10000) * 10;
+
+      console.log(emailSentAt);
+      console.log(reminderHour - emailDateRightNow.getHours() - 1);
+      console.log(reminderMinute - emailDateRightNow.getMinutes());
+      console.log(secondsAdded);
+      const msg = {
+        to: "yiqingzh58@gmail.com", // Change to your recipient
+        from: "habitreminder17@gmail.com", // Change to your verified sender
+        subject: "Habit Reminder",
+        text: "Your avatar is hungry :( Login to habit to check in on your progress to feed your avatar!",
+        html: "<strong>Your avatar is hungry :( Login to habit to check in on your progress to feed your avatar!</strong>",
+        send_at: emailSentAt,
+      };
+      sgMail
+        .send(msg)
+        .then((response) => {
+          console.log(response[0].statusCode);
+          console.log(response[0].headers);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    },
+    null,
+    true,
+    "Asia/Singapore"
   );
 });
 

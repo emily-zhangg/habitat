@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-  <%-include('partials/header',{})%>
+  <%-include('header',{})%>
   <head>
     <title>Habit Check In</title>
   </head>
   <body>
-    <%- include('partials/nav',{user_id:habit.user_id})-%>
+    <%- include('nav',{user_id:habit.user_id})-%>
     <h1><%=habit.habit%></h1>
     <form
       class="form-horizontal form-group update-form col-sm-10"
@@ -16,7 +16,7 @@
         class="form-control"
         rows="3"
         placeholder="Enter your progress"
-        name="checkInText"
+        name="update"
       ></textarea>
       <button class="btn btn-default" type="submit">Log Habit</button>
       <button class="btn btn-default" formaction="/" formmethod="GET">

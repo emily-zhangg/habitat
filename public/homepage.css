@@ -5,3 +5,9 @@
 .habit h3 {
   font-size: 30px;
 }
+img {
+  animation-play-state: paused;
+}
+img:hover {
+  animation-play-state: running;
+}

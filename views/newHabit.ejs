@@ -1,41 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <%-include('partials/header',{})%>
+    <%-include('header',{})%>
     <title>New Habit</title>
   </head>
   <body>
-    <%- include('partials/nav',{user_id:user_id})-%>
-    <form
-      class="form-horizontal form-group"
-      action="/create/<%=user_id%>"
-      method="POST"
-    >
-      <p>pick your avatar</p>
-      <input type="radio" name="avatar" value="1" />
-      <label><img src="avatar/1/neutral" /></label><br />
-      <label>Enter Your Habit</label>
-      <input type="text" name="habit" /><br />
-      <label>Enter Due Date of your Habit</label>
-      <input type="text" name="endDate" /><br />
-      <label>Enter Formation Days of your Habit</label>
-      <input type="number" name="formationDays" /><br />
-      <label>Enter your action plan</label>
-      <input type="text" name="action" /><br />
-      <label>Frequency</label>
-      <input type="checkbox" name="frequency" value="1" />
-      <input type="checkbox" name="frequency" value="2" />
-      <input type="checkbox" name="frequency" value="3" />
-      <input type="checkbox" name="frequency" value="4" />
-      <input type="checkbox" name="frequency" value="5" />
-      <input type="checkbox" name="frequency" value="6" />
-      <input type="checkbox" name="frequency" value="7" /><br />
-      <label>Enter your Reminder Time</label>
-      <input type="text" name="reminder" /><br />
-      <button class="btn btn-default" formaction="/" formmethod="GET">
-        Cancel
-      </button>
-      <button class="btn btn-default" type="submit">Submit</button>
-    </form>
+    <%- include('nav',{user_id:user_id})-%>
+    <div class="container">
+      <form
+        class="form-horizontal form-group"
+        action="/create/<%=user_id%>"
+        method="POST"
+      >
+        <h4>Step 1: Pick your avatar</h4>
+        <input type="radio" name="avatar" value="1" /><img
+          class="pb-2"
+          style="width: 40%"
+          src="/avatar/1/neutral"
+        />
+        <input type="radio" name="avatar" value="2" /><img
+          style="width: 40%"
+          src="/avatar/2/neutral"
+        />
+        <h4>Step 2: Set up your habit</h4>
+        <label class="lead">Enter Your Habit</label>
+        <input class="form-control" type="text" name="habit" /><br />
+        <label class="lead">Due date to form your habit by</label>
+        <input type="date" name="endDate" /><br />
+        <h4>Step 3: Put your habit in action</h4>
+        <label class="lead">Enter your action plan</label>
+        <input class="form-control" type="text" name="action" /><br />
+        <h4>Step 4: Set up reminders for your action plan</h4>
+        <label class="lead">Remind me to do it every</label>
+        <input type="number" name="frequency" /><label>days at</label>
+        <input type="time" name="reminder" /><br />
+        <button class="btn btn-default" formaction="/" formmethod="GET">
+          Cancel
+        </button>
+        <button class="btn btn-default" type="submit">Submit</button>
+      </form>
+    </div>
   </body>
 </html>

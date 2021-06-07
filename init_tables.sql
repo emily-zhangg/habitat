@@ -9,20 +9,22 @@
     id SERIAL PRIMARY KEY,
     user_id INTEGER,
     habit TEXT,
-    description TEXT,
     avatar INTEGER,
     action TEXT,
+    frequency INTEGER,
     reminder_time TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     status BOOLEAN,
     end_date TEXT,
     formation_days INTEGER,
-    completed_days INTEGER
+    completed_days INTEGER,
+    last_check_in TEXT
   );
 
-
-  CREATE TABLE habit_frequency(
+  CREATE TABLE updates(
     id SERIAL PRIMARY KEY,
     habit_id INTEGER,
-    frequnecy INTEGER
+    update TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
+

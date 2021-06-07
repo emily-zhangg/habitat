@@ -1,18 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
-  <%-include('partials/header',{})%>
+  <%-include('header',{})%>
   <head>
     <link rel="stylesheet" href="homepage.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
 
     <title>Home Page</title>
   </head>
   <body>
-    <%- include('partials/nav',{user_id:habits[0].user_id})-%>
+    <%- include('nav',{user_id:user_id})-%>
     <h1>Welcome Back <%=user.name%></h1>
-    <%if (habits.length>0){%> <% habits.forEach((habit)=>{%>
+    <%if (habits.length>0){%> <% habits.forEach((habit,index)=>{%>
     <div class="habit">
       <h3 class="lead"><%=habit.habit%></h3>
-      <img src="avatar/<%=habit.avatar%>/happy" />
+      <img
+        class="
+          animate__animated animate__slow animate__bounce animate__infinite
+          animatedAvatar
+        "
+        src="/avatar/<%=habit.avatar%>/<%=avatarState[index]%>"
+      />
       <form action="/update/<%=habit.id%>">
         <button class="btn btn-default" type="submit">Feed Me!</button>
       </form>
