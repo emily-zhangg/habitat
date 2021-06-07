@@ -52,7 +52,7 @@ const checkAuth = (request, response, next) => {
   }
   request.isUserLoggedIn ? next() : response.redirect("/login");
 };
-
+// function to get difference in days between day provided in parameter and the current day
 const getNumberOfDays = (end) => {
   const date1 = new Date();
   const date2 = new Date(end);
@@ -81,6 +81,7 @@ app.get("/", checkAuth, (req, res) => {
       console.log(results.rows);
       const user_id = results.rows[0].id;
       const username = results.rows[0].name;
+      //get all habits tied to the user that are active
       pool.query(
         `SELECT * FROM habits WHERE user_id=${user_id}  AND status=true`,
         (error, result) => {
@@ -89,6 +90,7 @@ app.get("/", checkAuth, (req, res) => {
             return;
           }
           const activeHabits = [];
+          //get array of habits that are ongoing
           result.rows.forEach((habit) => {
             if (
               getNumberOfDays(habit.end_date) >= 0 &&
@@ -106,6 +108,7 @@ app.get("/", checkAuth, (req, res) => {
             }
             console.log("99", habit.id, getNumberOfDays(habit.last_check_in));
           });
+          //update any habits that has passed the dued check in date as missed habits
           result.rows.forEach((habit) => {
             if (
               getNumberOfDays(habit.end_date) < 0 ||
@@ -145,7 +148,7 @@ app.get("/", checkAuth, (req, res) => {
     }
   );
 });
-
+//social feature to view other users' active habits
 app.get("/social/:user_id", (req, res) => {
   pool.query(
     "SELECT users.name,habits.habit,habits.avatar FROM users INNER JOIN habits ON habits.user_id=users.id WHERE habits.status=true ORDER BY habits.created_at",
@@ -160,7 +163,7 @@ app.get("/social/:user_id", (req, res) => {
     }
   );
 });
-
+// to view all missed habits (habits that were created but not completed)
 app.get("/missed/:user_id", (req, res) => {
   pool.query(
     `SELECT * FROM habits WHERE user_id=${req.params.user_id}  AND status=false`,
@@ -175,7 +178,7 @@ app.get("/missed/:user_id", (req, res) => {
     }
   );
 });
-//update habit
+//update habit by clicking on 'feed me' button for avatar
 app.get("/update/:habit_id", checkAuth, (req, res) => {
   console.log(req.params.habit_id);
   pool.query(
@@ -216,7 +219,7 @@ app.post("/update/:habit_id", checkAuth, (req, res) => {
   );
 });
 
-//create habit pages
+//create habit
 app.get("/create/:user_id", checkAuth, (req, res) => {
   res.render("newHabit", { user_id: req.params.user_id });
 });
@@ -253,15 +256,18 @@ app.post("/create/:user_id", checkAuth, (req, res) => {
   );
   const reminderHour = Number(req.body.reminder.split(":")[0]);
   const reminderMinute = Number(req.body.reminder.split(":")[1]);
+  //determination if first reminder should be sent the day the habit was set
   const hasReminderTimePassed =
     reminderHour === dateRightNow.getHours()
       ? reminderMinute >= dateRightNow.getMinutes()
       : reminderHour > dateRightNow.getHours();
   console.log(reminderHour, reminderMinute);
+  //cron job that is set to start upon habit creation
   const job = cron.schedule(
     `${reminderMinute} */${req.body.frequency * 24} * * *`,
     function () {
       console.log("send mail");
+      //calculation of time to schedule the mail on
       const emailDateRightNow = new Date();
       let secondsAdded;
       if (hasReminderTimePassed) {
@@ -303,8 +309,7 @@ app.post("/create/:user_id", checkAuth, (req, res) => {
     "Asia/Singapore"
   );
 });
-
-//user login page
+//user sign up page
 app.get("/signup", (req, res) => {
   res.render("signUpForm", {});
 });
@@ -332,6 +337,7 @@ app.post("/signup", (req, res) => {
     }
   );
 });
+//user login page
 app.get("/login", (req, res) => {
   res.render("loginForm", {});
 });
@@ -356,10 +362,11 @@ app.post("/login", (req, res) => {
     }
   );
 });
+//user logout page
 app.get("/logout", (req, res) => {
   res.clearCookie("userId");
   res.clearCookie("loggedIn");
   res.redirect("/");
 });
-//user sign up page
+
 app.listen(3004);
