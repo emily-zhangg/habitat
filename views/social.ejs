@@ -13,7 +13,10 @@
       style="display: flex; justify-content: space-around"
     >
       <% habits.forEach((habit,index)=>{%>
-      <div class="card border border-info bg-info" style="width: 40vw">
+      <div
+        class="card border border-info bg-info"
+        style="width: 40vw; margin: 10px; padding: 4px"
+      >
         <img
           class="card-img-top w-50 img-thumbnail"
           src="/avatar/<%=habit.avatar%>/happy"
@@ -22,7 +25,8 @@
         />
         <div class="card-body">
           <h4 class="card-title"><%=habit.name%></h4>
-          <p class="card-text text-muted"><%=habit.habit%></p>
+          <h5 class="card-text">Habit: <%=habit.habit%></h5>
+          <p class="card-text text-muted">Action Plan: <%=habit.action%></p>
         </div>
       </div>
 

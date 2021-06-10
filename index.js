@@ -10,12 +10,23 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Initialise the DB connection
 const { Pool } = pg;
-const pgConnectionConfigs = {
-  user: "yiqing",
-  host: "localhost",
-  database: "project2",
-  port: 5432,
-};
+let pgConnectionConfigs;
+if (process.env.DATABASE_URL) {
+  // pg will take in the entire value and use it to connect
+  pgConnectionConfigs = {
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  };
+} else {
+  pgConnectionConfigs = {
+    user: "yiqing",
+    host: "localhost",
+    database: "project2",
+    port: 5432,
+  };
+}
 const pool = new Pool(pgConnectionConfigs);
 const app = express();
 
@@ -126,11 +137,16 @@ app.get("/", checkAuth, (req, res) => {
           });
           const avatarState = [];
           activeHabits.forEach((habit) => {
-            const fractionOfTimeLapse =
-              getNumberOfDays(habit.last_check_in) / habit.frequency;
+            const fractionOfTimeLapse = Math.abs(
+              getNumberOfDays(habit.last_check_in) / habit.frequency
+            );
+            console.log(
+              getNumberOfDays(habit.last_check_in),
+              fractionOfTimeLapse
+            );
             if (fractionOfTimeLapse > 0.5) {
               avatarState.push("angry");
-            } else if (fractionOfTimeLapse > 0.1) {
+            } else if (fractionOfTimeLapse > 0.05) {
               avatarState.push("neutral");
             } else {
               avatarState.push("happy");
@@ -151,7 +167,7 @@ app.get("/", checkAuth, (req, res) => {
 //social feature to view other users' active habits
 app.get("/social/:user_id", (req, res) => {
   pool.query(
-    "SELECT users.name,habits.habit,habits.avatar FROM users INNER JOIN habits ON habits.user_id=users.id WHERE habits.status=true ORDER BY habits.created_at",
+    "SELECT users.name,habits.habit,habits.avatar,habits.action FROM users INNER JOIN habits ON habits.user_id=users.id WHERE habits.status=true ORDER BY habits.created_at",
     (err, result) => {
       if (err) {
         return console.error("error", err);
@@ -369,4 +385,6 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-app.listen(3004);
+const PORT = process.env.PORT || 3004;
+
+app.listen(PORT);
