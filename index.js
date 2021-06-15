@@ -141,6 +141,7 @@ app.get("/", checkAuth, (req, res) => {
               getNumberOfDays(habit.last_check_in) / habit.frequency
             );
             console.log(
+              "wat",
               getNumberOfDays(habit.last_check_in),
               fractionOfTimeLapse
             );
